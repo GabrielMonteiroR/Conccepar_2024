@@ -8,7 +8,7 @@ server.use(express.json());
 
 const users = [];
 const eventos = [];
-
+const notas = [];
 
 function verificarToken(req, res, next) {
     const token = req.headers['authorization'];
@@ -25,6 +25,44 @@ function verificarToken(req, res, next) {
         next();
     });
 }
+
+server.post('/v1/notes', verificarToken, (req, res) => {
+    const { content } = req.body;
+    const newNote = { content };
+    notas.push(newNote);
+    res.status(201).json({ message: 'Nota criada com sucesso.' });
+});
+
+server.get('/v1/notes', verificarToken, (req, res) => {
+    res.json(notas);
+});
+
+server.get('/v1/events/:eventId/notes', verificarToken, (req, res) => {
+    const eventId = req.params.eventId;
+    const eventNotes = notas.filter(note => note.eventId === eventId);
+    res.json(eventNotes);
+});
+
+server.put('/v1/notes/:id', verificarToken, (req, res) => {
+    const id = req.params.id;
+    const { content } = req.body;
+    const noteIndex = notas.findIndex(note => note.id === id);
+    if (noteIndex === -1) {
+        return res.status(404).json({ error: 'Nota não encontrada.' });
+    }
+    notas[noteIndex].content = content;
+    res.json({ message: 'Nota atualizada com sucesso.' });
+});
+
+server.delete('/v1/notes/:id', verificarToken, (req, res) => {
+    const id = req.params.id;
+    const noteIndex = notas.findIndex(note => note.id === id);
+    if (noteIndex === -1) {
+        return res.status(404).json({ error: 'Nota não encontrada.' });
+    }
+    notas.splice(noteIndex, 1);
+    res.json({ message: 'Nota excluída com sucesso.' });
+});
 
 server.post('/v1/login', (req, res) => {
     const { email, password } = req.body;
@@ -57,12 +95,10 @@ server.post('/v1/register', (req, res) => {
 });
 
 server.get('/v1/eventos', verificarToken, (req, res) => {
-
     res.json(eventos);
 });
 
 server.post('/v1/evento', verificarToken, (req, res) => {
-
     const { nome, data, descricao } = req.body;
     const novoEvento = { nome, data, descricao };
     eventos.push(novoEvento);
@@ -70,7 +106,6 @@ server.post('/v1/evento', verificarToken, (req, res) => {
 });
 
 server.put('/v1/evento/:id', verificarToken, (req, res) => {
-
     const id = req.params.id;
     const { nome, data, descricao } = req.body;
     const eventoIndex = eventos.findIndex(evento => evento.id === id);
@@ -82,7 +117,6 @@ server.put('/v1/evento/:id', verificarToken, (req, res) => {
 });
 
 server.delete('/v1/evento/:id', verificarToken, (req, res) => {
-
     const id = req.params.id;
     const eventoIndex = eventos.findIndex(evento => evento.id === id);
     if (eventoIndex === -1) {
